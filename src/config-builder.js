@@ -21,7 +21,7 @@ async function createConfig(hostname, username, password) {
 
     let hostport = 80;
     if (hostname.indexOf(':') > -1) {
-        hostport = parseInt(hostname.substr(hostname.indexOf(':') + 1));
+        hostport = hostname.substr(hostname.indexOf(':') + 1).parseInt();
         hostname = hostname.substr(0, hostname.indexOf(':'));
     }
 
