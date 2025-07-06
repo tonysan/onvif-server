@@ -17,7 +17,7 @@ Date.prototype.isDstObserved = function() {
     return this.getTimezoneOffset() < this.stdTimezoneOffset();
 }
 
-function getIpAddressFromMac(macAddress) {
+function getHostname(macAddress) {
     let networkInterfaces = os.networkInterfaces();
     for (let interface in networkInterfaces)
         for (let network of networkInterfaces[interface])
@@ -27,12 +27,10 @@ function getIpAddressFromMac(macAddress) {
 }
 
 class OnvifServer {
-    constructor(config, logger) {
+    constructor(config) {
         this.config = config;
-        this.logger = logger;
-
         if (!this.config.hostname)
-            this.config.hostname = getIpAddressFromMac(this.config.mac);
+            this.config.hostname = getHostname(this.config.mac);
 
         this.videoSource = {
             attributes: {
@@ -269,8 +267,8 @@ class OnvifServer {
                 
                     GetDeviceInformation: (args) => {
                         return {
-                            Manufacturer: 'Onvif',
-                            Model: 'Cardinal',
+                            Manufacturer: process.env.ONVIF_MANUFACTURER || 'Onvif',
+                            Model: process.env.ONVIF_MODEL || 'Cardinal',
                             FirmwareVersion: '1.0.0',
                             SerialNumber: `${this.config.name.replace(' ', '_')}-0000`,
                             HardwareId: `${this.config.name.replace(' ', '_')}-1001`
@@ -366,11 +364,11 @@ class OnvifServer {
 
     enableDebugOutput() {
         this.deviceService.on('request', (request, methodName) => {
-            this.logger.debug('DeviceService: ' + methodName);
+            console.log('DeviceService: ' + methodName);
         });
         
         this.mediaService.on('request', (request, methodName) => {
-            this.logger.debug('MediaService: ' + methodName);
+            console.log('MediaService: ' + methodName);
         });
     }
 
@@ -387,13 +385,7 @@ class OnvifServer {
                 } catch (err) {
                     probeType = '';
                 }
-
-                if (typeof probeType === 'object')
-                    probeType = probeType._;
             
-                if (typeof probeUuid === 'object')
-                    probeUuid = probeUuid._;
-
                 if (probeType === '' || probeType.indexOf('NetworkVideoTransmitter') > -1) {
                     let response = 
                        `<?xml version="1.0" encoding="UTF-8"?>
@@ -448,3 +440,4 @@ function createServer(config) {
 }
 
 exports.createServer = createServer;
+exports.getHostname = getHostname;
